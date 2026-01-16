@@ -1,7 +1,6 @@
 package kr.co.iei.utils;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,39 +8,46 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class FileUtil {
 	
-	public String fileUpload(String savePath, MultipartFile file) {
-		//파일원본 이름
-		String fileName = file.getOriginalFilename();
-		//원본 파일 이름에서 처음을 기준으로 마지막을 .까지 파일 이름 가져옴 
-		String onlyFileName = fileName.substring(0, fileName.lastIndexOf("."));
-		//원본 파일 이름을 .기준으로 뒤를 가져옴
-		String extention = fileName.substring(fileName.lastIndexOf("."));
-		
-		//파일 경로 빈 값으로 선언
-		String filePath = null;
-		
-		int count = 0;
-		while(true) {
-			if(count == 0) {
-				filePath = onlyFileName+extention;
-			}else {
-				filePath = onlyFileName + "("+count+")"+extention;
-			}
-			File fileCheck = new File(savePath+filePath);
-			
-			if(!fileCheck.exists()) {
-				break;
-			}
-			count++;
-		}
-		File uploadFile = new File(savePath+filePath);
-		try {
-			//파일 업로드
-			file.transferTo(uploadFile);
-		} catch (IllegalStateException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return filePath;
+	public String fileUpload(String savepath, MultipartFile file) {
+	    // ✅ 폴더가 없으면 자동 생성
+	    File dir = new File(savepath);
+	    if (!dir.exists()) {
+	        boolean created = dir.mkdirs();
+	        if (created) {
+	            System.out.println("생성 성공: " + savepath);
+	        } else {
+	            System.out.println("폴더 생성 실패: " + savepath);
+	        }
+	    }
+	    
+	    String filename = file.getOriginalFilename();
+	    String onlyFilename = filename.substring(0, filename.lastIndexOf("."));
+	    String extension = filename.substring(filename.lastIndexOf("."));
+	    String filepath = null;
+	    int count = 0;
+	    
+	    while(true) {
+	        if(count == 0) {
+	            filepath = onlyFilename + extension;
+	        } else {
+	            filepath = onlyFilename + "_" + count + extension;
+	        }
+	        
+	        File checkFile = new File(savepath + filepath);
+	        if(!checkFile.exists()) {
+	            break;
+	        }
+	        count++;
+	    }
+	    
+	    try {
+	        file.transferTo(new File(savepath + filepath));
+	        System.out.println("파일 업로드 성공: " + savepath + filepath);
+	    } catch(Exception e) {
+	        System.out.println("파일 업로드 실패: " + e.getMessage());
+	        e.printStackTrace();
+	        return null;
+	    }
+	    return filepath;
 	}
 }

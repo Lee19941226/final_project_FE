@@ -29,6 +29,7 @@ import kr.co.iei.freeboard.model.dto.FreeBoardCommentDTO;
 import kr.co.iei.freeboard.model.dto.FreeBoardCommentLikeDTO;
 import kr.co.iei.freeboard.model.dto.FreeBoardDTO;
 import kr.co.iei.freeboard.model.dto.FreeBoardLikeDTO;
+import kr.co.iei.freeboard.model.dto.FreeBoardPhotoDTO;
 import kr.co.iei.freeboard.model.dto.FreeBoardViewDTO;
 import kr.co.iei.freeboard.model.service.FreeBoardService;
 import kr.co.iei.tradeBoard.model.service.TradeBoardService;
@@ -123,9 +124,19 @@ public class FreeBoardController {
 	}
 	@PostMapping(value = "/image")
 	public ResponseEntity<String> editorImage(@ModelAttribute MultipartFile image){
-		String savepath = root+"/freeBoard/editor/";
-		String filepath = fileUtil.fileUpload(savepath, image);
-		return ResponseEntity.ok(filepath);
+		String savepath = root + "/freeBoard/editor/";
+	    
+	    // ✅ 폴더 자동 생성
+	    File dir = new File(savepath);
+	    if (!dir.exists()) {
+	        dir.mkdirs();
+	        System.out.println("에디터 이미지 폴더 생성: " + savepath);
+	    }
+	    
+	    String filepath = fileUtil.fileUpload(savepath, image);
+	    System.out.println("에디터 이미지 업로드: " + filepath);
+	    
+	    return ResponseEntity.ok(filepath);
 	}
 	@GetMapping(value = "/detail/freeBoardcate")
 	public ResponseEntity<FreeBoardCategoryDTO> oneCate(@RequestParam int freeBoardNo){
@@ -133,7 +144,7 @@ public class FreeBoardController {
 		System.out.println("freeBoard : " + freeBoardCate);
 		return ResponseEntity.ok(freeBoardCate);
 	}
-	/*
+	
 	//TextEditor에서 이미지 삭제
 	@DeleteMapping("/image/{filename}")
 	public ResponseEntity<String> deleteEditorImage(@PathVariable String filename) {
@@ -164,7 +175,7 @@ public class FreeBoardController {
 	        return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
 	    }
 	}
-	*/
+	
 	//TextEditor 이미지 입력 후 delete
 	@PatchMapping(value = "/image/{freeBoardNo}")
 	public ResponseEntity<Integer> deleteImg(@PathVariable int freeBoardNo){
@@ -174,33 +185,56 @@ public class FreeBoardController {
 	}
 	
 	@PostMapping(value = "/boardWrite")
-	public ResponseEntity<Integer> insertFreeBoard(@ModelAttribute FreeBoardDTO freeBoard, @ModelAttribute MultipartFile freeBoardThumbnail, @ModelAttribute MultipartFile[] freeBoardPhoto){
-		//root : freeBoard 폴더 -> thumbnail폴더 안쪽
-		
-		if(freeBoardThumbnail != null) {
-			String savepath = root + "/freeBoard/thumbnail/";
-			String filepath = fileUtil.fileUpload(savepath, freeBoardThumbnail);
-			
-			freeBoard.setFreeBoardThumbnail(filepath);
-		}
-		/*
-		List<FreeBoardPhotoDTO> freeBoardPhotoList = new ArrayList<FreeBoardPhotoDTO>();
-		if(freeBoardPhoto != null) {
-			String savepath = root+ "/freeBoard/image/";
-			for(MultipartFile file : freeBoardPhoto) {
-				String FBPhotopath = file.getOriginalFilename();
-				String FBPhotoname = fileUtil.fileUpload(savepath, file);
-				FreeBoardPhotoDTO fileDTO = new FreeBoardPhotoDTO();
-				fileDTO.setFBPhotoname(FBPhotoname);
-				fileDTO.setFBPhotopath(FBPhotopath);
-				
-				freeBoardPhotoList.add(fileDTO);
-				System.out.println(freeBoardPhotoList);
-			}
-		}*/
-		int result = freeBoardService.insertFreeBoard(freeBoard);
-		return ResponseEntity.ok(result);
+	public ResponseEntity<Integer> insertFreeBoard(
+	    @ModelAttribute FreeBoardDTO freeBoard, 
+	    @ModelAttribute MultipartFile freeBoardThumbnail, 
+	    @ModelAttribute MultipartFile[] freeBoardPhoto
+	) {
+	    // 썸네일 업로드
+	    if(freeBoardThumbnail != null && !freeBoardThumbnail.isEmpty()) {
+	        String savepath = root + "/freeBoard/thumbnail/";
+	        
+	        // ✅ 폴더 자동 생성
+	        File dir = new File(savepath);
+	        if (!dir.exists()) {
+	            dir.mkdirs();
+	            System.out.println("✅ 썸네일 폴더 생성: " + savepath);
+	        }
+	        
+	        String filepath = fileUtil.fileUpload(savepath, freeBoardThumbnail);
+	        freeBoard.setFreeBoardThumbnail(filepath);
+	        System.out.println("✅ 썸네일 업로드: " + filepath);
+	    }
+	    
+	    // 첨부 이미지 업로드 (필요시)
+	    if(freeBoardPhoto != null && freeBoardPhoto.length > 0) {
+	        String savepath = root + "/freeBoard/image/";
+	        
+	        // ✅ 폴더 자동 생성
+	        File dir = new File(savepath);
+	        if (!dir.exists()) {
+	            dir.mkdirs();
+	            System.out.println("✅ 첨부파일 폴더 생성: " + savepath);
+	        }
+	        
+	        List<FreeBoardPhotoDTO> freeBoardPhotoList = new ArrayList<>();
+	        for(MultipartFile file : freeBoardPhoto) {
+	            if(!file.isEmpty()) {
+	                String filename = fileUtil.fileUpload(savepath, file);
+	                FreeBoardPhotoDTO photoDTO = new FreeBoardPhotoDTO();
+	                photoDTO.setFBPhotoname(filename);
+	                photoDTO.setFBPhotopath(file.getOriginalFilename());
+	                freeBoardPhotoList.add(photoDTO);
+	                System.out.println("✅ 첨부파일 업로드: " + filename);
+	            }
+	        }
+	        // freeBoardPhotoList를 freeBoard에 설정하는 로직 추가
+	    }
+	    
+	    int result = freeBoardService.insertFreeBoard(freeBoard);
+	    return ResponseEntity.ok(result);
 	}
+
 	@GetMapping(value = "/detail/{freeBoardNo}")
 	public ResponseEntity<FreeBoardDTO> selectOneDetail(@PathVariable int freeBoardNo){
 		FreeBoardDTO freeBoard = freeBoardService.selectOneDetail(freeBoardNo);

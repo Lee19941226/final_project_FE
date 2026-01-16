@@ -5,7 +5,6 @@ import ImageResize from "quill-image-resize-module-react";
 import "react-quill/dist/quill.snow.css";
 import "../free_board/freeBoard.css";
 
-// ✅ 전역 등록 (quill-image-resize-module-react 내부에서 window.Quill을 사용함)
 window.Quill = Quill;
 Quill.register("modules/ImageResize", ImageResize);
 
@@ -19,6 +18,7 @@ const TextEditor = (props) => {
     input.type = "file";
     input.accept = "image/*";
     input.click();
+
     input.onchange = () => {
       const file = input.files[0];
       if (!file) return;
@@ -31,7 +31,12 @@ const TextEditor = (props) => {
           headers: { "Content-Type": "multipart/form-data" },
         })
         .then((res) => {
-          const imageUrl = `${backServer}/freeBoard/editor/${res.data}`;
+          const imageUrl = res.data.startsWith("http")
+            ? res.data
+            : `${backServer}/freeBoard/editor/${res.data}`;
+
+          console.log("✅ 업로드된 이미지 URL:", imageUrl);
+
           const editor = editorRef.current.getEditor();
           const range = editor.getSelection(true);
           editor.insertEmbed(range.index, "image", imageUrl);
@@ -39,11 +44,15 @@ const TextEditor = (props) => {
 
           setTimeout(() => {
             const imgTag = editor.root.querySelector(`img[src="${imageUrl}"]`);
-            if (!imgTag) return;
+            if (!imgTag) {
+              console.error("❌ 이미지 태그를 찾을 수 없습니다.");
+              return;
+            }
+
+            console.log("✅ 이미지 태그 발견:", imgTag);
 
             imgTag.style.maxWidth = "200px";
             imgTag.style.height = "auto";
-            imgTag.style.position = "relative";
 
             const wrapper = document.createElement("span");
             wrapper.style.position = "relative";
@@ -52,70 +61,83 @@ const TextEditor = (props) => {
             const deleteBtn = document.createElement("button");
             deleteBtn.innerText = "×";
             deleteBtn.style.position = "absolute";
-            deleteBtn.style.top = "0";
-            deleteBtn.style.right = "0";
-            deleteBtn.style.background = "rgba(0,0,0,0.5)";
+            deleteBtn.style.top = "5px";
+            deleteBtn.style.right = "5px";
+            deleteBtn.style.background = "rgba(255, 0, 0, 0.7)";
             deleteBtn.style.color = "#fff";
             deleteBtn.style.border = "none";
             deleteBtn.style.cursor = "pointer";
-            deleteBtn.style.fontSize = "14px";
+            deleteBtn.style.fontSize = "18px";
+            deleteBtn.style.fontWeight = "bold";
             deleteBtn.style.borderRadius = "50%";
-            deleteBtn.style.width = "20px";
-            deleteBtn.style.height = "20px";
+            deleteBtn.style.width = "24px";
+            deleteBtn.style.height = "24px";
+            deleteBtn.style.opacity = "0";
+            deleteBtn.style.transition = "opacity 0.2s";
+            deleteBtn.style.zIndex = "10";
 
             imgTag.parentNode.insertBefore(wrapper, imgTag);
             wrapper.appendChild(imgTag);
             wrapper.appendChild(deleteBtn);
 
-            // ✅ 이미지 삭제 이벤트
-            deleteBtn.onclick = () => {
-              wrapper.remove();
-              const filename = imageUrl.split("/").pop();
-              axios
-                .delete(`${backServer}/freeBoard/image/${filename}`)
-                .then(() => console.log("이미지 삭제 성공"))
-                .catch((err) => console.error("이미지 삭제 실패", err));
+            console.log("✅ 삭제 버튼 생성 완료");
+
+            // 호버 이벤트
+            wrapper.onmouseenter = () => {
+              console.log("🖱️ 이미지 호버 시작");
+              deleteBtn.style.opacity = "1";
             };
-          }, 200);
+
+            wrapper.onmouseleave = () => {
+              console.log("🖱️ 이미지 호버 종료");
+              deleteBtn.style.opacity = "0";
+            };
+
+            deleteBtn.onmouseenter = () => {
+              deleteBtn.style.background = "rgba(255, 0, 0, 0.9)";
+              deleteBtn.style.transform = "scale(1.1)";
+            };
+
+            deleteBtn.onmouseleave = () => {
+              deleteBtn.style.background = "rgba(255, 0, 0, 0.7)";
+              deleteBtn.style.transform = "scale(1)";
+            };
+
+            deleteBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              console.log("🗑️ 삭제 버튼 클릭");
+
+              if (confirm("이미지를 삭제하시겠습니까?")) {
+                const filename = imageUrl.split("/").pop();
+                console.log("🗑️ 삭제할 파일명:", filename);
+
+                axios
+                  .delete(`${backServer}/freeBoard/image/${filename}`)
+                  .then((res) => {
+                    console.log("✅ 이미지 삭제 성공:", res.data);
+                    wrapper.remove();
+                  })
+                  .catch((err) => {
+                    console.error("❌ 이미지 삭제 실패:", err);
+                    alert("이미지 삭제에 실패했습니다.");
+                  });
+              }
+            };
+          }, 300);
 
           if (setFreeBoardThumbnail) {
             setFreeBoardThumbnail(imageUrl);
           }
         })
-        .catch((err) => console.error("이미지 업로드 실패", err));
+        .catch((err) => {
+          console.error("❌ 이미지 업로드 실패", err);
+          alert("이미지 업로드에 실패했습니다.");
+        });
     };
   };
 
-  // ✅ 에디터에서 수동 삭제 감지
-  useEffect(() => {
-    const editor = editorRef.current?.getEditor();
-    if (!editor) return;
-
-    const getImageList = () =>
-      Array.from(editor.root.querySelectorAll("img")).map((img) =>
-        img.getAttribute("src")
-      );
-
-    let currentImages = getImageList();
-
-    editor.on("text-change", () => {
-      const newImages = getImageList();
-      const deletedImages = currentImages.filter(
-        (src) => !newImages.includes(src)
-      );
-      deletedImages.forEach((src) => {
-        if (!src) return;
-        const filename = src.split("/").pop();
-        axios
-          .delete(`${backServer}/freeBoard/image/${filename}`)
-          .then(() => console.log("삭제된 이미지:", filename))
-          .catch((err) => console.error("삭제 실패", err));
-      });
-      currentImages = newImages;
-    });
-  }, [backServer]);
-
-  // ✅ Quill 모듈 설정
   const modules = useMemo(() => {
     return {
       toolbar: {
@@ -135,7 +157,7 @@ const TextEditor = (props) => {
       },
       ImageResize: {
         parchment: Quill.import("parchment"),
-        modules: ["Resize", "DisplaySize", "Toolbar"],
+        modules: ["Resize", "DisplaySize"],
       },
     };
   }, []);
