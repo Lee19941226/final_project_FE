@@ -493,13 +493,11 @@ const FreeBoardDetail = () => {
       </div>
       <div className="detail-title-section">
         <div className="detail-title">{freeBoard.freeBoardTitle}</div>
-        {(memberType === 1 || freeBoardMemberNo) && (
+        {(memberType === 1 || freeBoardMemberNo === memberNo) && (
           <div className="detail-buttonBox">
-            {/*
             <button className="modify-btn" onClick={freeBoardModify}>
               수정
             </button>
-            */}
             <button className="delete-btn" onClick={freeBoardDelete}>
               삭제
             </button>

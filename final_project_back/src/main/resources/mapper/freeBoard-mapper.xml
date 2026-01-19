@@ -176,19 +176,7 @@
 	 		#{freeBoardThumbnail}
 	 		)
 	 </insert>
-	 <!-- 
-	 <insert id="insertFreeBoardFile">
-	 	insert into fb_photo_tbl values
-	 		(
-	 		#{freeBoardCategoryNo}, 
-	 		#{freeBoardSubcategoryNo},
-	 		#{freeBoardNo}, 
-	 		fb_photo_seq.nextval, 
-	 		#{FBPhotopath}, 
-	 		#{FBPhotoname}
-	 		)
-	 </insert>
-	  -->
+	
 	 <select id="selectOneDetail" resultType="freeBoard">
 	 	select f.*, m.member_nickname, m.member_id, (select count(*) from fb_like_tbl where free_board_no=f.free_board_no) as like_count
                 from free_board_tbl f
@@ -425,29 +413,6 @@
 		            fbc_like_tbl 
         where fb_comment_no = #{fbCommentNo})
 	 </select>
-	<!-- 
-	<select id="naviBoardList" resultType = "freeBoard">
-		select * from (
-		    select rownum as fbnum, fb.* 
-		    	from (
-			      select 
-			      	f.*, 
-			      	m.member_nickname, 
-			      	m.member_id,
-			        (
-			         select count(*) from 
-			         	fb_like_tbl 
-			         where free_board_no=f.free_board_no) as like_count
-			       from 
-			       	free_board_tbl f
-			       left join member_tbl m on f.member_no = m.member_no
-			       order by free_board_no asc
-			      ) fb
-			      order by fbnum desc
-			    )
-			  where fbnum = #{freeBoardfbNum}
-	</select>
-	 -->
 	
 	<select id="recommends" resultType="freeBoard">
 		SELECT *

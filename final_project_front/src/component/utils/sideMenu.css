@@ -2,7 +2,7 @@
   background-color: #f0f2f5;
   color: #2f4e70;
   width: 220px;
-  min-height: 500px;
+  height: auto;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(47, 78, 112, 0.15);
@@ -94,7 +94,6 @@
   align-items: center;
   padding: 0 5px;
   gap: 8px;
-  
 }
 .side-submenu li {
   display: flex;

@@ -156,9 +156,6 @@ public class FreeBoardController {
 	        String savePath = root + "/freeBoard/editor/";
 	        File targetFile = new File(savePath + decodedFilename);
 	        
-	        // 디버그용 로그
-	        System.out.println("[DELETE] 요청된 이미지 파일: " + targetFile.getAbsolutePath());
-
 	        if (!targetFile.exists()) {
 	            return ResponseEntity.status(404).body("파일이 존재하지 않습니다: " + decodedFilename);
 	        }
