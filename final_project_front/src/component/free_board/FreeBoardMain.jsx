@@ -28,7 +28,7 @@ const FreeBoardMain = () => {
   const [reqPageInfo, setReqPageInfo] = useState({
     sideBtnCount: 3,
     pageNo: 1,
-    listCnt: 10,
+    listCnt: 8,
     order: 2,
   });
   const [totalListCount, setTotalListCount] = useState(0);
