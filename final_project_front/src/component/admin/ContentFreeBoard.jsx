@@ -9,6 +9,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import BaseModal from "../utils/BaseModal";
 import { useNavigate } from "react-router-dom";
+import DOMPurify from "dompurify";
 
 const ContentFreeBoard = () => {
   const [noticeValue, setNoticeValue] = useState("");
@@ -379,7 +380,7 @@ const ContentFreeBoard = () => {
                         <td>{notice.noticeNo}</td>
                         <td
                           dangerouslySetInnerHTML={{
-                            __html: notice.noticeContent,
+                            __html: DOMPurify.sanitize(notice.noticeContent),
                           }}
                         ></td>
                         <td>{notice.noticeDate}</td>
