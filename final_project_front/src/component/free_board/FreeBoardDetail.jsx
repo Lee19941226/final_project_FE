@@ -381,13 +381,12 @@ const FreeBoardDetail = () => {
       navigate("/member/login");
     } else {
       axios //조회 후 null이면 insert / !null delete
-        .get(
-          `${backServer}/freeBoard/detail/selectLike?memberNo=${
-            memberNo ? memberNo : 0
-          }&freeBoardNo=${freeBoardNo}&freeBoardSubcategoryNo=${
-            comment.freeBoardSubcategoryNo
-          }&freeBoardCategoryNo=${comment.freeBoardCategoryNo}`
-        )
+        .post(`${backServer}/freeBoard/detail/selectLike`, {
+          memberNo: memberNo ? memberNo : 0,
+          freeBoardNo,
+          freeBoardSubcategoryNo: comment.freeBoardSubcategoryNo,
+          freeBoardCategoryNo: comment.freeBoardCategoryNo,
+        })
         .then((res) => {
           if (res.data !== "" || res.data !== undefined) {
             setToggle(!toggle);
@@ -904,9 +903,10 @@ const FreeBoardDetail = () => {
                           navigate("/member/login");
                         } else {
                           axios //조회 후 null이면 insert / !null delete
-                            .get(
-                              `${backServer}/freeBoard/detail/commentLike?memberNo=${memberNo}&fbCommentNo=${comment.fbCommentNo}`
-                            )
+                            .post(`${backServer}/freeBoard/detail/commentLike`, {
+                              memberNo,
+                              fbCommentNo: comment.fbCommentNo,
+                            })
                             .then((res) => {
                               if (res.data !== "" && res.data !== undefined) {
                                 setCommentLike((p) => ({

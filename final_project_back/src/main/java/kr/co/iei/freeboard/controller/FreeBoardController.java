@@ -339,9 +339,14 @@ public class FreeBoardController {
 		return ResponseEntity.ok(result);
 	}
 	/* 좋아요 */
-	@GetMapping(value = "/detail/selectLike")
-	public ResponseEntity<FreeBoardLikeDTO> countLike(@RequestParam int memberNo, @RequestParam int freeBoardNo, @RequestParam int freeBoardSubcategoryNo, @RequestParam int freeBoardCategoryNo){
-		FreeBoardLikeDTO freeBoardLike = freeBoardService.countLike(memberNo, freeBoardNo, freeBoardSubcategoryNo, freeBoardCategoryNo);
+	@PostMapping(value = "/detail/selectLike")
+	public ResponseEntity<FreeBoardLikeDTO> countLike(@RequestBody FreeBoardLikeDTO freeBoardLikeDTO){
+		FreeBoardLikeDTO freeBoardLike = freeBoardService.countLike(
+			freeBoardLikeDTO.getMemberNo(),
+			freeBoardLikeDTO.getFreeBoardNo(),
+			freeBoardLikeDTO.getFreeBoardSubcategoryNo(),
+			freeBoardLikeDTO.getFreeBoardCategoryNo()
+		);
 		//System.out.println(freeBoardLike);
 		return ResponseEntity.ok(freeBoardLike);
 	}
@@ -353,9 +358,12 @@ public class FreeBoardController {
 		System.out.println(freeBoardView);
 		return ResponseEntity.ok(freeBoardView);		
 	}
-	@GetMapping(value="/detail/commentLike")
-	public ResponseEntity<FreeBoardCommentLikeDTO> commentLike(@RequestParam int memberNo, @RequestParam int fbCommentNo){
-		FreeBoardCommentLikeDTO freeBoardCommentLike = freeBoardService.commentLike(memberNo, fbCommentNo);
+	@PostMapping(value="/detail/commentLike")
+	public ResponseEntity<FreeBoardCommentLikeDTO> commentLike(@RequestBody FreeBoardCommentLikeDTO freeBoardCommentLikeDTO){
+		FreeBoardCommentLikeDTO freeBoardCommentLike = freeBoardService.commentLike(
+			freeBoardCommentLikeDTO.getMemberNo(),
+			freeBoardCommentLikeDTO.getFbCommentNo()
+		);
 		
 		return ResponseEntity.ok(freeBoardCommentLike);
 	}
